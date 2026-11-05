@@ -1,0 +1,67 @@
+name: react-api-calls
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  users-api:
+    image: bogdandanielioan/devops-one-user-management-java:1.0
+    ports:
+      - "8111:8080"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/user_management_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=50
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  job-queue-api:
+    image: bogdandanielioan/devops-job-queue-api:1.0
+    ports:
+      - "8107:8080"
+    restart: unless-stopped
+
+  shop-api:
+    image: bogdandanielioan/devops-online-shop-api-java:1.0
+    ports:
+      - "8104:8082"
+    environment:
+      DB_URL: "jdbc:mysql://mysql:3306/online_shop_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=50
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  school-api:
+    image: bogdandanielioan/devops-online-school-api-java:1.0
+    ports:
+      - "8105:8081"
+    environment:
+      DB_URL: "jdbc:mysql://mysql:3306/online_school_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=50
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
